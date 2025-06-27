@@ -419,22 +419,23 @@
 
   let currentLesson = [], currentIndex = 0, stars = 0, touchTarget = null;
 
-    function startLesson(number) {
-      document.getElementById('start-screen').style.display = 'none';
-      document.getElementById('game-screen').style.display = 'block';
-      document.getElementById('lesson-title').textContent = `Lesson ${number}`;
-      currentLesson = lessons[number];
-      currentIndex = 0;
-      stars = 0;
-      document.getElementById('star-count').textContent = stars;
-      updateProgressBar();
-      resetTranslation();
-      showNextQuestion();
-    }
-
+   function startLesson(number) {
+  document.getElementById('start-screen').classList.add('hidden');
+  const gameScreen = document.getElementById('game-screen');
+  gameScreen.classList.remove('hidden');  // <-- FIX: remove the hidden class
+  document.getElementById('lesson-title').textContent = `Lesson ${number}`;
+  currentLesson = lessons[number];
+  currentIndex = 0;
+  stars = 0;
+  document.getElementById('star-count').textContent = stars;
+  updateProgressBar();
+  resetTranslation();
+  showNextQuestion();
+}
+   
     function goBackToMenu() {
       document.getElementById('game-screen').style.display = 'none';
-      document.getElementById('start-screen').style.display = 'block';
+      document.getElementById('start-screen').classList.add = ('hidden');
       document.getElementById('sentence-container').innerHTML = '';
       document.getElementById('word-bank').innerHTML = '';
       resetTranslation();
