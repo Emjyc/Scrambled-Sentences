@@ -1,11 +1,80 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Grammar Game</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #fceff9;
+      background-image: radial-gradient(#ffd6ec 5%, transparent 6%), radial-gradient(#ffd6ec 5%, transparent 6%);
+      background-size: 40px 40px;
+      background-position: 0 0, 20px 20px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 18px;
+      background-color: #ffaad4;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #ff90c2;
+    }
+
+    #sentence-container, #word-bank {
+      margin: 20px auto;
+      padding: 10px;
+      border: 2px dashed #ccc;
+      min-height: 60px;
+      width: 80%;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      background-color: white;
+      border-radius: 10px;
+    }
+
+    .word {
+      margin: 5px;
+      padding: 10px 15px;
+      background: #fff6fc;
+      border: 2px solid #ffaad4;
+      border-radius: 10px;
+      cursor: grab;
+      user-select: none;
+      font-size: 18px;
+    }
+
+    #stars {
+      font-size: 20px;
+      margin-top: 10px;
+    }
+
+    .star-float {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      font-size: 40px;
+      color: gold;
+      animation: floatUp 1s ease-out forwards;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    @keyframes floatUp {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      100% { transform: translate(-50%, -150%) scale(2); opacity: 0; }
+    }
+  </style>
 </head>
 <body>
   <div id="start-screen">
@@ -24,8 +93,116 @@
 
   <div id="star-animation"></div>
 
-  <audio id="correct-sound" src="correct.mp3" preload="auto"></audio>
+  <!-- Replace 'correct.mp3' with a cute sound URL or host your own -->
+  <audio id="correct-sound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6cf3e05f70.mp3" preload="auto"></audio>
 
-  <script src="script.js"></script>
+  <script>
+    const lessons = {
+      1: [
+        { scrambled: ["my", "I", "homework", "did"], answer: ["I", "did", "my", "homework"] },
+        { scrambled: ["breakfast", "ate", "She"], answer: ["She", "ate", "breakfast"] }
+      ],
+      2: [
+        { scrambled: ["watch", "they", "TV", "Did"], answer: ["Did", "they", "watch", "TV"] },
+        { scrambled: ["opened", "He", "window", "the"], answer: ["He", "opened", "the", "window"] }
+      ]
+    };
+
+    let currentLesson = [];
+    let currentIndex = 0;
+    let stars = 0;
+
+    function startLesson(number) {
+      document.getElementById('start-screen').style.display = 'none';
+      document.getElementById('game-screen').style.display = 'block';
+      document.getElementById('lesson-title').textContent = `Lesson ${number}`;
+      currentLesson = lessons[number];
+      currentIndex = 0;
+      stars = 0;
+      document.getElementById('star-count').textContent = stars;
+      showNextQuestion();
+    }
+
+    function showNextQuestion() {
+      const sentence = currentLesson[currentIndex];
+      if (!sentence) {
+        alert('Lesson Complete!');
+        return;
+      }
+
+      const sentenceContainer = document.getElementById('sentence-container');
+      const wordBank = document.getElementById('word-bank');
+      sentenceContainer.innerHTML = '';
+      wordBank.innerHTML = '';
+
+      sentence.answer.forEach(() => {
+        const dropSpot = document.createElement('div');
+        dropSpot.className = 'word drop';
+        dropSpot.textContent = '';
+        dropSpot.ondragover = e => e.preventDefault();
+        dropSpot.ondrop = drop;
+        sentenceContainer.appendChild(dropSpot);
+      });
+
+      sentence.scrambled
+        .sort(() => 0.5 - Math.random())
+        .forEach(word => {
+          const wordDiv = document.createElement('div');
+          wordDiv.className = 'word';
+          wordDiv.draggable = true;
+          wordDiv.textContent = word;
+          wordDiv.ondragstart = drag;
+          wordBank.appendChild(wordDiv);
+        });
+    }
+
+    function drag(e) {
+      e.dataTransfer.setData('text', e.target.textContent);
+    }
+
+    function drop(e) {
+      if (!e.target.textContent) {
+        const text = e.dataTransfer.getData('text');
+        e.target.textContent = text;
+      }
+      checkAnswer();
+    }
+
+    function checkAnswer() {
+      const userAnswer = Array.from(document.querySelectorAll('#sentence-container .drop'))
+        .map(div => div.textContent);
+
+      const correct = currentLesson[currentIndex].answer;
+
+      if (userAnswer.every((w, i) => w === correct[i])) {
+        stars++;
+        document.getElementById('star-count').textContent = stars;
+        showStarAnimation();
+        speakSentence(correct.join(' '));
+        currentIndex++;
+        setTimeout(showNextQuestion, 1800);
+      }
+    }
+
+    function showStarAnimation() {
+      const star = document.createElement('div');
+      star.className = 'star-float';
+      star.textContent = '⭐';
+      document.getElementById('star-animation').appendChild(star);
+      setTimeout(() => star.remove(), 1000);
+      document.getElementById('correct-sound').play();
+    }
+
+    function speakSentence(text) {
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.pitch = 1.1;
+        utterance.rate = 0.9;
+        utterance.volume = 1;
+        speechSynthesis.speak(utterance);
+      }
+    }
+  </script>
 </body>
 </html>
