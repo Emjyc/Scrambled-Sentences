@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Grammar Game</title>
+
+  <!-- 🌟 Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -81,6 +85,22 @@
       color: #444;
       font-style: italic;
     }
+
+    #progress-container {
+      width: 80%;
+      height: 20px;
+      margin: 20px auto;
+      background-color: #eee;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(to right, #ffaad4, #ffc0cb, #ffe0eb);
+      transition: width 0.5s ease;
+    }
   </style>
 </head>
 <body>
@@ -92,6 +112,11 @@
 
   <div id="game-screen" style="display:none;">
     <h2 id="lesson-title"></h2>
+
+    <div id="progress-container">
+      <div id="progress-bar"></div>
+    </div>
+
     <div id="sentence-container" class="drop-zone"></div>
     <div id="word-bank"></div>
     <div id="translation"></div>
@@ -143,6 +168,7 @@
       currentIndex = 0;
       stars = 0;
       document.getElementById('star-count').textContent = stars;
+      updateProgressBar();
       showNextQuestion();
     }
 
@@ -152,12 +178,14 @@
       document.getElementById('sentence-container').innerHTML = '';
       document.getElementById('word-bank').innerHTML = '';
       document.getElementById('translation').textContent = '';
+      document.getElementById('progress-bar').style.width = '0%';
     }
 
     function showNextQuestion() {
       const sentence = currentLesson[currentIndex];
       if (!sentence) {
-        alert('Lesson Complete!');
+        showStarConfetti();
+        setTimeout(() => alert('🎉 Lesson Complete!'), 300);
         return;
       }
 
@@ -167,6 +195,7 @@
       sentenceContainer.innerHTML = '';
       wordBank.innerHTML = '';
       translation.textContent = '';
+      updateProgressBar();
 
       sentence.answer.forEach(() => {
         const dropSpot = document.createElement('div');
@@ -239,6 +268,22 @@
         utterance.volume = 1;
         speechSynthesis.speak(utterance);
       }
+    }
+
+    function updateProgressBar() {
+      const progress = ((currentIndex) / currentLesson.length) * 100;
+      document.getElementById('progress-bar').style.width = progress + '%';
+    }
+
+    function showStarConfetti() {
+      confetti({
+        particleCount: 100,
+        spread: 90,
+        origin: { y: 0.6 },
+        emojis: ["⭐", "✨", "🌟"],
+        scalar: 1.5,
+        shapes: ["text"]
+      });
     }
   </script>
 </body>
