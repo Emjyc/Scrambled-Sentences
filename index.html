@@ -129,14 +129,15 @@
   <audio id="correct-sound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6cf3e05f70.mp3" preload="auto"></audio>
 
   <script>
+  <script>
     const lessons = {
       1: [
-        { scrambled: ["my", "I", "homework", "did"], answer: ["I", "did", "my", "homework"], translation: "私は宿題をしました。" },
-        { scrambled: ["breakfast", "ate", "She"], answer: ["She", "ate", "breakfast"], translation: "彼女は朝ごはんを食べました。" }
+        { scrambled: ["I", "did", "my", "homework."], answer: ["I", "did", "my", "homework."], translation: "私は宿題をしました。" },
+        { scrambled: ["She", "ate", "breakfast."], answer: ["She", "ate", "breakfast."], translation: "彼女は朝ごはんを食べました。" }
       ],
       2: [
-        { scrambled: ["watch", "they", "TV", "Did"], answer: ["Did", "they", "watch", "TV"], translation: "彼らはテレビを見ましたか？" },
-        { scrambled: ["opened", "He", "window", "the"], answer: ["He", "opened", "the", "window"], translation: "彼は窓を開けました。" }
+        { scrambled: ["Did", "they", "watch", "TV?"], answer: ["Did", "they", "watch", "TV?"], translation: "彼らはテレビを見ましたか？" },
+        { scrambled: ["He", "opened", "the", "window."], answer: ["He", "opened", "the", "window."], translation: "彼は窓を開けました。" }
       ]
     };
 
@@ -161,7 +162,11 @@
 
     function showNextQuestion() {
       const sentence = currentLesson[currentIndex];
-      if (!sentence) { showStarConfetti(); setTimeout(() => alert('🎉 Lesson Complete!'), 300); return; }
+      if (!sentence) {
+        showStarConfetti();
+        setTimeout(() => alert('🎉 Lesson Complete!'), 300);
+        return;
+      }
       const container = document.getElementById('sentence-container');
       const bank = document.getElementById('word-bank');
       resetTranslation(); container.innerHTML = ''; bank.innerHTML = ''; updateProgressBar();
@@ -174,7 +179,7 @@
         container.appendChild(dropSpot);
       });
 
-      sentence.scrambled.sort(() => 0.5 - Math.random()).forEach(word => {
+      sentence.scrambled.forEach(word => {
         const wordDiv = document.createElement('div');
         wordDiv.className = 'word';
         wordDiv.textContent = word;
@@ -195,6 +200,7 @@
       if (!e.target.textContent) {
         const text = e.dataTransfer.getData('text');
         e.target.textContent = text;
+        removeWordFromBank(text);
         checkAnswer();
       }
     }
@@ -220,6 +226,7 @@
         const touch = e.changedTouches[0];
         if (!spot.textContent && touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
           spot.textContent = touchTarget.textContent;
+          removeWordFromBank(touchTarget.textContent);
           dropped = true;
         }
       });
@@ -229,6 +236,11 @@
       touchTarget.style.zIndex = '';
       touchTarget = null;
       if (dropped) checkAnswer();
+    }
+
+    function removeWordFromBank(word) {
+      const wordBankWords = document.querySelectorAll('#word-bank .word');
+      wordBankWords.forEach(w => { if (w.textContent === word) w.remove(); });
     }
 
     function checkAnswer() {
@@ -263,8 +275,6 @@
           setTimeout(showNextQuestion, 2000);
         }, 800);
       }
-    }
-
     function showStarAnimation() {
       const star = document.createElement('div');
       star.className = 'star-float';
