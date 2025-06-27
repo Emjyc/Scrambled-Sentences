@@ -152,7 +152,8 @@
   <audio id="correct-sound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6cf3e05f70.mp3" preload="auto"></audio>
 
  <script>
-  const lessons = {
+ window.onload = function () {
+   const lessons = {
     1: [
   { scrambled: ["I", "won't", "go", "to", "school", "tomorrow."], answer: ["I", "won't", "go", "to", "school", "tomorrow."], translation: "私は明日学校へ行きません。"  },
   { scrambled: ["He", "is", "not", "going", "to", "play", "baseball."], answer: ["He", "is", "not", "going", "to", "play", "baseball."], translation: "彼は野球をする予定ではありません。"},
@@ -294,7 +295,7 @@
   { scrambled: ["I", "have", "to", "clean", "my", "room."], answer: ["I", "have", "to", "clean", "my", "room."], translation: "私は部屋を掃除しなければなりません。" },
   { scrambled: ["You", "have", "to", "be", "quiet", "here."], answer: ["You", "have", "to", "be", "quiet", "here."], translation: "ここでは静かにしなければなりません。" },
   { scrambled: ["We", "have", "to", "go", "home", "now."], answer: ["We", "have", "to", "go", "home", "now."], translation: "私たちは今帰らなければなりません。" },
-  { scrambled: ["He", "doesn’t", "have", "to", "do", "the", "dishes."], answer: ["He", "doesn’t", "have", "to", "do", "the", "dishes."], translation: "彼は皿を洗う必要はありません。}" 
+  { scrambled: ["He", "doesn’t", "have", "to", "do", "the", "dishes."], answer: ["He", "doesn’t", "have", "to", "do", "the", "dishes."], translation: "彼は皿を洗う必要はありません。"
       ],
     13: 
    [
@@ -414,9 +415,13 @@
   { scrambled: ["My", "teacher", "said", "that", "the", "test", "is", "tomorrow."], answer: ["My", "teacher", "said", "that", "the", "test", "is", "tomorrow."], translation: "先生はテストが明日だと言いました。" }  
    ]  };
 
+  
   let currentLesson = [], currentIndex = 0, stars = 0, touchTarget = null;
 
     function startLesson(number) {
+      if (!lessons[number]) {alert("Lesson not available.");return; }
+    currentIndex = 0;
+    score = 0;
       document.getElementById('start-screen').style.display = 'none';
       document.getElementById('game-screen').style.display = 'block';
       document.getElementById('lesson-title').textContent = `Lesson ${number}`;
@@ -425,7 +430,8 @@
       stars = 0;
       document.getElementById('star-count').textContent = stars;
       updateProgressBar();
-      resetTranslation();
+      resetTranslation();    
+      loadQuestion();
       showNextQuestion();
     }
 
