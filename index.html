@@ -128,194 +128,195 @@
   <div id="star-animation"></div>
   <audio id="correct-sound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6cf3e05f70.mp3" preload="auto"></audio>
 
-  <script>
-  <script>
-    const lessons = {
-      1: [
-        { scrambled: ["I", "did", "my", "homework."], answer: ["I", "did", "my", "homework."], translation: "私は宿題をしました。" },
-        { scrambled: ["She", "ate", "breakfast."], answer: ["She", "ate", "breakfast."], translation: "彼女は朝ごはんを食べました。" }
-      ],
-      2: [
-        { scrambled: ["Did", "they", "watch", "TV?"], answer: ["Did", "they", "watch", "TV?"], translation: "彼らはテレビを見ましたか？" },
-        { scrambled: ["He", "opened", "the", "window."], answer: ["He", "opened", "the", "window."], translation: "彼は窓を開けました。" }
-      ]
-    };
+ <script>
+  const lessons = {
+    1: [
+      { scrambled: ["I", "did", "my", "homework."], answer: ["I", "did", "my", "homework."], translation: "私は宿題をしました。" },
+      { scrambled: ["She", "ate", "breakfast."], answer: ["She", "ate", "breakfast."], translation: "彼女は朝ごはんを食べました。" }
+    ],
+    2: [
+      { scrambled: ["Did", "they", "watch", "TV?"], answer: ["Did", "they", "watch", "TV?"], translation: "彼らはテレビを見ましたか？" },
+      { scrambled: ["He", "opened", "the", "window."], answer: ["He", "opened", "the", "window."], translation: "彼は窓を開けました。" }
+    ]
+  };
 
-    let currentLesson = [], currentIndex = 0, stars = 0, touchTarget = null;
+  let currentLesson = [], currentIndex = 0, stars = 0, touchTarget = null;
 
-    function startLesson(number) {
-      document.getElementById('start-screen').style.display = 'none';
-      document.getElementById('game-screen').style.display = 'block';
-      document.getElementById('lesson-title').textContent = `Lesson ${number}`;
-      currentLesson = lessons[number]; currentIndex = 0; stars = 0;
+  function startLesson(number) {
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'block';
+    document.getElementById('lesson-title').textContent = `Lesson ${number}`;
+    currentLesson = lessons[number]; currentIndex = 0; stars = 0;
+    document.getElementById('star-count').textContent = stars;
+    updateProgressBar(); resetTranslation(); showNextQuestion();
+  }
+
+  function goBackToMenu() {
+    document.getElementById('game-screen').style.display = 'none';
+    document.getElementById('start-screen').style.display = 'block';
+    document.getElementById('sentence-container').innerHTML = '';
+    document.getElementById('word-bank').innerHTML = '';
+    resetTranslation(); document.getElementById('progress-bar').style.width = '0%';
+  }
+
+  function showNextQuestion() {
+    const sentence = currentLesson[currentIndex];
+    if (!sentence) {
+      showStarConfetti();
+      setTimeout(() => alert('🎉 Lesson Complete!'), 300);
+      return;
+    }
+    const container = document.getElementById('sentence-container');
+    const bank = document.getElementById('word-bank');
+    resetTranslation(); container.innerHTML = ''; bank.innerHTML = ''; updateProgressBar();
+
+    sentence.answer.forEach(() => {
+      const dropSpot = document.createElement('div');
+      dropSpot.className = 'word drop';
+      dropSpot.ondragover = e => e.preventDefault();
+      dropSpot.ondrop = drop;
+      container.appendChild(dropSpot);
+    });
+
+    sentence.scrambled.forEach(word => {
+      const wordDiv = document.createElement('div');
+      wordDiv.className = 'word';
+      wordDiv.textContent = word;
+      wordDiv.draggable = true;
+      wordDiv.ondragstart = drag;
+      wordDiv.ontouchstart = touchStart;
+      wordDiv.ontouchmove = touchMove;
+      wordDiv.ontouchend = touchEnd;
+      bank.appendChild(wordDiv);
+    });
+  }
+
+  function drag(e) {
+    e.dataTransfer.setData('text', e.target.textContent);
+  }
+
+  function drop(e) {
+    if (!e.target.textContent) {
+      const text = e.dataTransfer.getData('text');
+      e.target.textContent = text;
+      removeWordFromBank(text);
+      checkAnswer();
+    }
+  }
+
+  function touchStart(e) {
+    touchTarget = e.target;
+    touchTarget.style.position = 'absolute';
+    touchTarget.style.zIndex = '1000';
+  }
+
+  function touchMove(e) {
+    if (!touchTarget) return;
+    const touch = e.touches[0];
+    touchTarget.style.left = touch.clientX - touchTarget.offsetWidth / 2 + 'px';
+    touchTarget.style.top = touch.clientY - touchTarget.offsetHeight / 2 + 'px';
+  }
+
+  function touchEnd(e) {
+    const dropSpots = document.querySelectorAll('.drop');
+    let dropped = false;
+    dropSpots.forEach(spot => {
+      const rect = spot.getBoundingClientRect();
+      const touch = e.changedTouches[0];
+      if (!spot.textContent && touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+        spot.textContent = touchTarget.textContent;
+        removeWordFromBank(touchTarget.textContent);
+        dropped = true;
+      }
+    });
+    touchTarget.style.position = '';
+    touchTarget.style.left = '';
+    touchTarget.style.top = '';
+    touchTarget.style.zIndex = '';
+    touchTarget = null;
+    if (dropped) checkAnswer();
+  }
+
+  function removeWordFromBank(word) {
+    const wordBankWords = document.querySelectorAll('#word-bank .word');
+    wordBankWords.forEach(w => { if (w.textContent === word) w.remove(); });
+  }
+
+  function checkAnswer() {
+    const dropSpots = document.querySelectorAll('#sentence-container .drop');
+    const userAnswer = Array.from(dropSpots).map(div => div.textContent);
+    const correct = currentLesson[currentIndex].answer;
+
+    if (userAnswer.every((w, i) => w === correct[i])) {
+      stars++;
       document.getElementById('star-count').textContent = stars;
-      updateProgressBar(); resetTranslation(); showNextQuestion();
-    }
-
-    function goBackToMenu() {
-      document.getElementById('game-screen').style.display = 'none';
-      document.getElementById('start-screen').style.display = 'block';
-      document.getElementById('sentence-container').innerHTML = '';
-      document.getElementById('word-bank').innerHTML = '';
-      resetTranslation(); document.getElementById('progress-bar').style.width = '0%';
-    }
-
-    function showNextQuestion() {
-      const sentence = currentLesson[currentIndex];
-      if (!sentence) {
-        showStarConfetti();
-        setTimeout(() => alert('🎉 Lesson Complete!'), 300);
-        return;
-      }
-      const container = document.getElementById('sentence-container');
-      const bank = document.getElementById('word-bank');
-      resetTranslation(); container.innerHTML = ''; bank.innerHTML = ''; updateProgressBar();
-
-      sentence.answer.forEach(() => {
-        const dropSpot = document.createElement('div');
-        dropSpot.className = 'word drop';
-        dropSpot.ondragover = e => e.preventDefault();
-        dropSpot.ondrop = drop;
-        container.appendChild(dropSpot);
-      });
-
-      sentence.scrambled.forEach(word => {
-        const wordDiv = document.createElement('div');
-        wordDiv.className = 'word';
-        wordDiv.textContent = word;
-        wordDiv.draggable = true;
-        wordDiv.ondragstart = drag;
-        wordDiv.ontouchstart = touchStart;
-        wordDiv.ontouchmove = touchMove;
-        wordDiv.ontouchend = touchEnd;
-        bank.appendChild(wordDiv);
-      });
-    }
-
-    function drag(e) {
-      e.dataTransfer.setData('text', e.target.textContent);
-    }
-
-    function drop(e) {
-      if (!e.target.textContent) {
-        const text = e.dataTransfer.getData('text');
-        e.target.textContent = text;
-        removeWordFromBank(text);
-        checkAnswer();
-      }
-    }
-
-    function touchStart(e) {
-      touchTarget = e.target;
-      touchTarget.style.position = 'absolute';
-      touchTarget.style.zIndex = '1000';
-    }
-
-    function touchMove(e) {
-      if (!touchTarget) return;
-      const touch = e.touches[0];
-      touchTarget.style.left = touch.clientX - touchTarget.offsetWidth / 2 + 'px';
-      touchTarget.style.top = touch.clientY - touchTarget.offsetHeight / 2 + 'px';
-    }
-
-    function touchEnd(e) {
-      const dropSpots = document.querySelectorAll('.drop');
-      let dropped = false;
-      dropSpots.forEach(spot => {
-        const rect = spot.getBoundingClientRect();
-        const touch = e.changedTouches[0];
-        if (!spot.textContent && touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
-          spot.textContent = touchTarget.textContent;
-          removeWordFromBank(touchTarget.textContent);
-          dropped = true;
-        }
-      });
-      touchTarget.style.position = '';
-      touchTarget.style.left = '';
-      touchTarget.style.top = '';
-      touchTarget.style.zIndex = '';
-      touchTarget = null;
-      if (dropped) checkAnswer();
-    }
-
-    function removeWordFromBank(word) {
-      const wordBankWords = document.querySelectorAll('#word-bank .word');
-      wordBankWords.forEach(w => { if (w.textContent === word) w.remove(); });
-    }
-
-    function checkAnswer() {
-      const dropSpots = document.querySelectorAll('#sentence-container .drop');
-      const userAnswer = Array.from(dropSpots).map(div => div.textContent);
-      const correct = currentLesson[currentIndex].answer;
-
-      if (userAnswer.every((w, i) => w === correct[i])) {
-        stars++;
-        document.getElementById('star-count').textContent = stars;
-        showStarAnimation();
+      showStarAnimation();
+      speakSentence(correct.join(' '));
+      const jp = currentLesson[currentIndex].translation;
+      const translation = document.getElementById('translation');
+      translation.textContent = `🇯🇵 ${jp}`;
+      translation.classList.add('visible');
+      currentIndex++;
+      setTimeout(showNextQuestion, 1800);
+    } else if (userAnswer.every(w => w !== '')) {
+      dropSpots.forEach(spot => spot.classList.add('flash-red'));
+      setTimeout(() => {
+        dropSpots.forEach((spot, i) => {
+          spot.classList.remove('flash-red');
+          spot.textContent = correct[i];
+        });
         speakSentence(correct.join(' '));
         const jp = currentLesson[currentIndex].translation;
         const translation = document.getElementById('translation');
         translation.textContent = `🇯🇵 ${jp}`;
         translation.classList.add('visible');
         currentIndex++;
-        setTimeout(showNextQuestion, 1800);
-      } else if (userAnswer.every(w => w !== '')) {
-        dropSpots.forEach(spot => spot.classList.add('flash-red'));
-        setTimeout(() => {
-          dropSpots.forEach((spot, i) => {
-            spot.classList.remove('flash-red');
-            spot.textContent = correct[i];
-          });
-          speakSentence(correct.join(' '));
-          const jp = currentLesson[currentIndex].translation;
-          const translation = document.getElementById('translation');
-          translation.textContent = `🇯🇵 ${jp}`;
-          translation.classList.add('visible');
-          currentIndex++;
-          setTimeout(showNextQuestion, 2000);
-        }, 800);
-      }
-    function showStarAnimation() {
-      const star = document.createElement('div');
-      star.className = 'star-float';
-      star.textContent = '⭐';
-      document.getElementById('star-animation').appendChild(star);
-      setTimeout(() => star.remove(), 1000);
-      document.getElementById('correct-sound').play();
+        setTimeout(showNextQuestion, 2000);
+      }, 800);
     }
+  }
 
-    function speakSentence(text) {
-      if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
-        utterance.pitch = 1.1;
-        utterance.rate = 0.9;
-        utterance.volume = 1;
-        speechSynthesis.speak(utterance);
-      }
-    }
+  function updateProgressBar() {
+    const progress = ((currentIndex) / currentLesson.length) * 100;
+    document.getElementById('progress-bar').style.width = progress + '%';
+  }
 
-    function updateProgressBar() {
-      const progress = ((currentIndex) / currentLesson.length) * 100;
-      document.getElementById('progress-bar').style.width = progress + '%';
-    }
+  function resetTranslation() {
+    const translation = document.getElementById('translation');
+    translation.textContent = '';
+    translation.classList.remove('visible');
+  }
 
-    function resetTranslation() {
-      const translation = document.getElementById('translation');
-      translation.textContent = '';
-      translation.classList.remove('visible');
+  function speakSentence(text) {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.pitch = 1.1;
+      utterance.rate = 0.9;
+      utterance.volume = 1;
+      speechSynthesis.speak(utterance);
     }
+  }
 
-    function showStarConfetti() {
-      confetti({
-        particleCount: 100,
-        spread: 90,
-        origin: { y: 0.6 },
-        emojis: ["⭐", "✨", "🌟"],
-        scalar: 1.5,
-        shapes: ["text"]
-      });
-    }
-  </script>
+  function showStarAnimation() {
+    const star = document.createElement('div');
+    star.className = 'star-float';
+    star.textContent = '⭐';
+    document.getElementById('star-animation').appendChild(star);
+    setTimeout(() => star.remove(), 1000);
+    document.getElementById('correct-sound').play();
+  }
+
+  function showStarConfetti() {
+    confetti({
+      particleCount: 100,
+      spread: 90,
+      origin: { y: 0.6 },
+      emojis: ["⭐", "✨", "🌟"],
+      scalar: 1.5,
+      shapes: ["text"]
+    });
+  }
+</script>
 </body>
 </html>
