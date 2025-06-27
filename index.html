@@ -58,6 +58,9 @@
       position: relative;
       z-index: 1;
     }
+    .hidden {
+      display: none;
+    }
     .flash-red {
       animation: flashRed 0.4s alternate 3;
     }
@@ -138,14 +141,16 @@
     <button onclick="startLesson(21)">人に…が～だということおをする</button>
   </div>
 
-  <div id="game-screen" style="display:none;">
+<div id="game-screen" class="hidden">
     <h2 id="lesson-title"></h2>
-    <div id="progress-container"><div id="progress-bar"></div></div>
-    <div id="translation"></div>
+    <div id="progress-bar-container">
+      <div id="progress-bar" style="height: 10px; background: linear-gradient(to right, pink, lightblue); width: 0%; transition: width 0.3s ease;"></div>
+    </div>
     <div id="sentence-container" class="drop-zone"></div>
     <div id="word-bank"></div>
+    <div id="translation"></div>
     <div id="stars">Stars: <span id="star-count">0</span></div>
-    <button onclick="goBackToMenu()">Back to Main Menu</button>
+    <button onclick="goBackToMenu()">Back to Menu</button>
   </div>
 
   <div id="star-animation"></div>
@@ -420,18 +425,18 @@
   let currentLesson = [], currentIndex = 0, stars = 0, touchTarget = null;
 
    function startLesson(number) {
-  document.getElementById('start-screen').classList.add('hidden');
-  const gameScreen = document.getElementById('game-screen');
-  gameScreen.classList.remove('hidden');  // <-- FIX: remove the hidden class
-  document.getElementById('lesson-title').textContent = `Lesson ${number}`;
-  currentLesson = lessons[number];
-  currentIndex = 0;
-  stars = 0;
-  document.getElementById('star-count').textContent = stars;
-  updateProgressBar();
-  resetTranslation();
-  showNextQuestion();
-}
+      document.getElementById('start-screen').classList.add('hidden');
+      const gameScreen = document.getElementById('game-screen');
+      gameScreen.classList.remove('hidden');
+      document.getElementById('lesson-title').textContent = `Lesson ${number}`;
+      currentLesson = lessons[number];
+      currentIndex = 0;
+      stars = 0;
+      document.getElementById('star-count').textContent = stars;
+      updateProgressBar();
+      resetTranslation();
+      showNextQuestion();
+    }
    
     function goBackToMenu() {
       document.getElementById('game-screen').style.display = 'none';
