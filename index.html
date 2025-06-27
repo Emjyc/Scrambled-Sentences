@@ -81,15 +81,23 @@
 
     #translation {
       margin-top: 10px;
+      margin-bottom: 10px;
       font-size: 18px;
       color: #444;
       font-style: italic;
+      min-height: 1.5em;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    #translation.visible {
+      opacity: 1;
     }
 
     #progress-container {
       width: 80%;
       height: 20px;
-      margin: 20px auto;
+      margin: 20px auto 10px auto;
       background-color: #eee;
       border-radius: 20px;
       overflow: hidden;
@@ -113,13 +121,15 @@
   <div id="game-screen" style="display:none;">
     <h2 id="lesson-title"></h2>
 
+    <!-- Progress + Translation -->
     <div id="progress-container">
       <div id="progress-bar"></div>
     </div>
 
+    <div id="translation"></div>
+
     <div id="sentence-container" class="drop-zone"></div>
     <div id="word-bank"></div>
-    <div id="translation"></div>
     <div id="stars">Stars: <span id="star-count">0</span></div>
     <button onclick="goBackToMenu()">Back to Main Menu</button>
   </div>
@@ -169,6 +179,7 @@
       stars = 0;
       document.getElementById('star-count').textContent = stars;
       updateProgressBar();
+      resetTranslation();
       showNextQuestion();
     }
 
@@ -178,6 +189,7 @@
       document.getElementById('sentence-container').innerHTML = '';
       document.getElementById('word-bank').innerHTML = '';
       document.getElementById('translation').textContent = '';
+      document.getElementById('translation').classList.remove('visible');
       document.getElementById('progress-bar').style.width = '0%';
     }
 
@@ -191,10 +203,9 @@
 
       const sentenceContainer = document.getElementById('sentence-container');
       const wordBank = document.getElementById('word-bank');
-      const translation = document.getElementById('translation');
+      resetTranslation();
       sentenceContainer.innerHTML = '';
       wordBank.innerHTML = '';
-      translation.textContent = '';
       updateProgressBar();
 
       sentence.answer.forEach(() => {
@@ -242,8 +253,10 @@
         showStarAnimation();
         speakSentence(correct.join(' '));
 
-        const translation = currentLesson[currentIndex].translation;
-        document.getElementById('translation').textContent = `🇯🇵 ${translation}`;
+        const jp = currentLesson[currentIndex].translation;
+        const translation = document.getElementById('translation');
+        translation.textContent = `🇯🇵 ${jp}`;
+        translation.classList.add('visible');
 
         currentIndex++;
         setTimeout(showNextQuestion, 1800);
@@ -273,6 +286,12 @@
     function updateProgressBar() {
       const progress = ((currentIndex) / currentLesson.length) * 100;
       document.getElementById('progress-bar').style.width = progress + '%';
+    }
+
+    function resetTranslation() {
+      const translation = document.getElementById('translation');
+      translation.textContent = '';
+      translation.classList.remove('visible');
     }
 
     function showStarConfetti() {
