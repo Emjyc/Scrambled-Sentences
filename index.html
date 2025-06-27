@@ -54,6 +54,13 @@
       position: relative;
       z-index: 1;
     }
+    .flash-red {
+      animation: flashRed 0.4s alternate 3;
+    }
+    @keyframes flashRed {
+      0% { background-color: #fff6fc; }
+      100% { background-color: #ffb3b3; }
+    }
     #stars {
       font-size: 20px;
       margin-top: 10px;
@@ -133,7 +140,7 @@
       ]
     };
 
-    let currentLesson = [], currentIndex = 0, stars = 0;
+    let currentLesson = [], currentIndex = 0, stars = 0, touchTarget = null;
 
     function startLesson(number) {
       document.getElementById('start-screen').style.display = 'none';
@@ -164,7 +171,6 @@
         dropSpot.className = 'word drop';
         dropSpot.ondragover = e => e.preventDefault();
         dropSpot.ondrop = drop;
-        dropSpot.ontouchstart = () => {};
         container.appendChild(dropSpot);
       });
 
@@ -184,6 +190,7 @@
     function drag(e) {
       e.dataTransfer.setData('text', e.target.textContent);
     }
+
     function drop(e) {
       if (!e.target.textContent) {
         const text = e.dataTransfer.getData('text');
@@ -192,7 +199,6 @@
       }
     }
 
-    let touchTarget = null;
     function touchStart(e) {
       touchTarget = e.target;
       touchTarget.style.position = 'absolute';
@@ -226,23 +232,43 @@
     }
 
     function checkAnswer() {
-      const userAnswer = Array.from(document.querySelectorAll('#sentence-container .drop')).map(div => div.textContent);
+      const dropSpots = document.querySelectorAll('#sentence-container .drop');
+      const userAnswer = Array.from(dropSpots).map(div => div.textContent);
       const correct = currentLesson[currentIndex].answer;
+
       if (userAnswer.every((w, i) => w === correct[i])) {
-        stars++; document.getElementById('star-count').textContent = stars;
-        showStarAnimation(); speakSentence(correct.join(' '));
+        stars++;
+        document.getElementById('star-count').textContent = stars;
+        showStarAnimation();
+        speakSentence(correct.join(' '));
         const jp = currentLesson[currentIndex].translation;
         const translation = document.getElementById('translation');
         translation.textContent = `🇯🇵 ${jp}`;
         translation.classList.add('visible');
         currentIndex++;
         setTimeout(showNextQuestion, 1800);
+      } else if (userAnswer.every(w => w !== '')) {
+        dropSpots.forEach(spot => spot.classList.add('flash-red'));
+        setTimeout(() => {
+          dropSpots.forEach((spot, i) => {
+            spot.classList.remove('flash-red');
+            spot.textContent = correct[i];
+          });
+          speakSentence(correct.join(' '));
+          const jp = currentLesson[currentIndex].translation;
+          const translation = document.getElementById('translation');
+          translation.textContent = `🇯🇵 ${jp}`;
+          translation.classList.add('visible');
+          currentIndex++;
+          setTimeout(showNextQuestion, 2000);
+        }, 800);
       }
     }
 
     function showStarAnimation() {
       const star = document.createElement('div');
-      star.className = 'star-float'; star.textContent = '⭐';
+      star.className = 'star-float';
+      star.textContent = '⭐';
       document.getElementById('star-animation').appendChild(star);
       setTimeout(() => star.remove(), 1000);
       document.getElementById('correct-sound').play();
@@ -251,7 +277,10 @@
     function speakSentence(text) {
       if ('speechSynthesis' in window) {
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US'; utterance.pitch = 1.1; utterance.rate = 0.9; utterance.volume = 1;
+        utterance.lang = 'en-US';
+        utterance.pitch = 1.1;
+        utterance.rate = 0.9;
+        utterance.volume = 1;
         speechSynthesis.speak(utterance);
       }
     }
@@ -269,8 +298,12 @@
 
     function showStarConfetti() {
       confetti({
-        particleCount: 100, spread: 90, origin: { y: 0.6 },
-        emojis: ["⭐", "✨", "🌟"], scalar: 1.5, shapes: ["text"]
+        particleCount: 100,
+        spread: 90,
+        origin: { y: 0.6 },
+        emojis: ["⭐", "✨", "🌟"],
+        scalar: 1.5,
+        shapes: ["text"]
       });
     }
   </script>
