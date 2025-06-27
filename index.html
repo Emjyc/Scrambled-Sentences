@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Grammar Game</title>
-
-  <!-- 🌟 Confetti Library -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -18,7 +15,6 @@
       text-align: center;
       padding: 20px;
     }
-
     button {
       padding: 10px 20px;
       margin: 10px;
@@ -29,11 +25,9 @@
       color: white;
       cursor: pointer;
     }
-
     button:hover {
       background-color: #ff90c2;
     }
-
     #sentence-container, #word-bank {
       margin: 20px auto;
       padding: 10px;
@@ -45,8 +39,8 @@
       justify-content: center;
       background-color: white;
       border-radius: 10px;
+      position: relative;
     }
-
     .word {
       margin: 5px;
       padding: 10px 15px;
@@ -56,13 +50,14 @@
       cursor: grab;
       user-select: none;
       font-size: 18px;
+      touch-action: none;
+      position: relative;
+      z-index: 1;
     }
-
     #stars {
       font-size: 20px;
       margin-top: 10px;
     }
-
     .star-float {
       position: absolute;
       top: 50%;
@@ -73,12 +68,10 @@
       pointer-events: none;
       z-index: 10;
     }
-
     @keyframes floatUp {
       0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
       100% { transform: translate(-50%, -150%) scale(2); opacity: 0; }
     }
-
     #translation {
       margin-top: 10px;
       margin-bottom: 10px;
@@ -89,11 +82,9 @@
       opacity: 0;
       transition: opacity 0.5s ease;
     }
-
     #translation.visible {
       opacity: 1;
     }
-
     #progress-container {
       width: 80%;
       height: 20px;
@@ -102,7 +93,6 @@
       border-radius: 20px;
       overflow: hidden;
     }
-
     #progress-bar {
       height: 100%;
       width: 0%;
@@ -120,14 +110,8 @@
 
   <div id="game-screen" style="display:none;">
     <h2 id="lesson-title"></h2>
-
-    <!-- Progress + Translation -->
-    <div id="progress-container">
-      <div id="progress-bar"></div>
-    </div>
-
+    <div id="progress-container"><div id="progress-bar"></div></div>
     <div id="translation"></div>
-
     <div id="sentence-container" class="drop-zone"></div>
     <div id="word-bank"></div>
     <div id="stars">Stars: <span id="star-count">0</span></div>
@@ -135,52 +119,29 @@
   </div>
 
   <div id="star-animation"></div>
-
   <audio id="correct-sound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6cf3e05f70.mp3" preload="auto"></audio>
 
   <script>
     const lessons = {
       1: [
-        {
-          scrambled: ["my", "I", "homework", "did"],
-          answer: ["I", "did", "my", "homework"],
-          translation: "私は宿題をしました。"
-        },
-        {
-          scrambled: ["breakfast", "ate", "She"],
-          answer: ["She", "ate", "breakfast"],
-          translation: "彼女は朝ごはんを食べました。"
-        }
+        { scrambled: ["my", "I", "homework", "did"], answer: ["I", "did", "my", "homework"], translation: "私は宿題をしました。" },
+        { scrambled: ["breakfast", "ate", "She"], answer: ["She", "ate", "breakfast"], translation: "彼女は朝ごはんを食べました。" }
       ],
       2: [
-        {
-          scrambled: ["watch", "they", "TV", "Did"],
-          answer: ["Did", "they", "watch", "TV"],
-          translation: "彼らはテレビを見ましたか？"
-        },
-        {
-          scrambled: ["opened", "He", "window", "the"],
-          answer: ["He", "opened", "the", "window"],
-          translation: "彼は窓を開けました。"
-        }
+        { scrambled: ["watch", "they", "TV", "Did"], answer: ["Did", "they", "watch", "TV"], translation: "彼らはテレビを見ましたか？" },
+        { scrambled: ["opened", "He", "window", "the"], answer: ["He", "opened", "the", "window"], translation: "彼は窓を開けました。" }
       ]
     };
 
-    let currentLesson = [];
-    let currentIndex = 0;
-    let stars = 0;
+    let currentLesson = [], currentIndex = 0, stars = 0;
 
     function startLesson(number) {
       document.getElementById('start-screen').style.display = 'none';
       document.getElementById('game-screen').style.display = 'block';
       document.getElementById('lesson-title').textContent = `Lesson ${number}`;
-      currentLesson = lessons[number];
-      currentIndex = 0;
-      stars = 0;
+      currentLesson = lessons[number]; currentIndex = 0; stars = 0;
       document.getElementById('star-count').textContent = stars;
-      updateProgressBar();
-      resetTranslation();
-      showNextQuestion();
+      updateProgressBar(); resetTranslation(); showNextQuestion();
     }
 
     function goBackToMenu() {
@@ -188,76 +149,92 @@
       document.getElementById('start-screen').style.display = 'block';
       document.getElementById('sentence-container').innerHTML = '';
       document.getElementById('word-bank').innerHTML = '';
-      document.getElementById('translation').textContent = '';
-      document.getElementById('translation').classList.remove('visible');
-      document.getElementById('progress-bar').style.width = '0%';
+      resetTranslation(); document.getElementById('progress-bar').style.width = '0%';
     }
 
     function showNextQuestion() {
       const sentence = currentLesson[currentIndex];
-      if (!sentence) {
-        showStarConfetti();
-        setTimeout(() => alert('🎉 Lesson Complete!'), 300);
-        return;
-      }
-
-      const sentenceContainer = document.getElementById('sentence-container');
-      const wordBank = document.getElementById('word-bank');
-      resetTranslation();
-      sentenceContainer.innerHTML = '';
-      wordBank.innerHTML = '';
-      updateProgressBar();
+      if (!sentence) { showStarConfetti(); setTimeout(() => alert('🎉 Lesson Complete!'), 300); return; }
+      const container = document.getElementById('sentence-container');
+      const bank = document.getElementById('word-bank');
+      resetTranslation(); container.innerHTML = ''; bank.innerHTML = ''; updateProgressBar();
 
       sentence.answer.forEach(() => {
         const dropSpot = document.createElement('div');
         dropSpot.className = 'word drop';
-        dropSpot.textContent = '';
         dropSpot.ondragover = e => e.preventDefault();
         dropSpot.ondrop = drop;
-        sentenceContainer.appendChild(dropSpot);
+        dropSpot.ontouchstart = () => {};
+        container.appendChild(dropSpot);
       });
 
-      sentence.scrambled
-        .sort(() => 0.5 - Math.random())
-        .forEach(word => {
-          const wordDiv = document.createElement('div');
-          wordDiv.className = 'word';
-          wordDiv.draggable = true;
-          wordDiv.textContent = word;
-          wordDiv.ondragstart = drag;
-          wordBank.appendChild(wordDiv);
-        });
+      sentence.scrambled.sort(() => 0.5 - Math.random()).forEach(word => {
+        const wordDiv = document.createElement('div');
+        wordDiv.className = 'word';
+        wordDiv.textContent = word;
+        wordDiv.draggable = true;
+        wordDiv.ondragstart = drag;
+        wordDiv.ontouchstart = touchStart;
+        wordDiv.ontouchmove = touchMove;
+        wordDiv.ontouchend = touchEnd;
+        bank.appendChild(wordDiv);
+      });
     }
 
     function drag(e) {
       e.dataTransfer.setData('text', e.target.textContent);
     }
-
     function drop(e) {
       if (!e.target.textContent) {
         const text = e.dataTransfer.getData('text');
         e.target.textContent = text;
+        checkAnswer();
       }
-      checkAnswer();
+    }
+
+    let touchTarget = null;
+    function touchStart(e) {
+      touchTarget = e.target;
+      touchTarget.style.position = 'absolute';
+      touchTarget.style.zIndex = '1000';
+    }
+
+    function touchMove(e) {
+      if (!touchTarget) return;
+      const touch = e.touches[0];
+      touchTarget.style.left = touch.clientX - touchTarget.offsetWidth / 2 + 'px';
+      touchTarget.style.top = touch.clientY - touchTarget.offsetHeight / 2 + 'px';
+    }
+
+    function touchEnd(e) {
+      const dropSpots = document.querySelectorAll('.drop');
+      let dropped = false;
+      dropSpots.forEach(spot => {
+        const rect = spot.getBoundingClientRect();
+        const touch = e.changedTouches[0];
+        if (!spot.textContent && touch.clientX >= rect.left && touch.clientX <= rect.right && touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+          spot.textContent = touchTarget.textContent;
+          dropped = true;
+        }
+      });
+      touchTarget.style.position = '';
+      touchTarget.style.left = '';
+      touchTarget.style.top = '';
+      touchTarget.style.zIndex = '';
+      touchTarget = null;
+      if (dropped) checkAnswer();
     }
 
     function checkAnswer() {
-      const userAnswer = Array.from(document.querySelectorAll('#sentence-container .drop'))
-        .map(div => div.textContent);
-
+      const userAnswer = Array.from(document.querySelectorAll('#sentence-container .drop')).map(div => div.textContent);
       const correct = currentLesson[currentIndex].answer;
-
       if (userAnswer.every((w, i) => w === correct[i])) {
-        stars++;
-        document.getElementById('star-count').textContent = stars;
-        showStarAnimation();
-        speakSentence(correct.join(' '));
-
+        stars++; document.getElementById('star-count').textContent = stars;
+        showStarAnimation(); speakSentence(correct.join(' '));
         const jp = currentLesson[currentIndex].translation;
         const translation = document.getElementById('translation');
         translation.textContent = `🇯🇵 ${jp}`;
         translation.classList.add('visible');
-
         currentIndex++;
         setTimeout(showNextQuestion, 1800);
       }
@@ -265,8 +242,7 @@
 
     function showStarAnimation() {
       const star = document.createElement('div');
-      star.className = 'star-float';
-      star.textContent = '⭐';
+      star.className = 'star-float'; star.textContent = '⭐';
       document.getElementById('star-animation').appendChild(star);
       setTimeout(() => star.remove(), 1000);
       document.getElementById('correct-sound').play();
@@ -275,10 +251,7 @@
     function speakSentence(text) {
       if ('speechSynthesis' in window) {
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
-        utterance.pitch = 1.1;
-        utterance.rate = 0.9;
-        utterance.volume = 1;
+        utterance.lang = 'en-US'; utterance.pitch = 1.1; utterance.rate = 0.9; utterance.volume = 1;
         speechSynthesis.speak(utterance);
       }
     }
@@ -296,12 +269,8 @@
 
     function showStarConfetti() {
       confetti({
-        particleCount: 100,
-        spread: 90,
-        origin: { y: 0.6 },
-        emojis: ["⭐", "✨", "🌟"],
-        scalar: 1.5,
-        shapes: ["text"]
+        particleCount: 100, spread: 90, origin: { y: 0.6 },
+        emojis: ["⭐", "✨", "🌟"], scalar: 1.5, shapes: ["text"]
       });
     }
   </script>
