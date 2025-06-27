@@ -70,9 +70,21 @@ function drop(e) {
   checkAnswer();
 }
 
-function checkAnswer() {
+ffunction checkAnswer() {
   const userAnswer = Array.from(document.querySelectorAll('#sentence-container .drop'))
     .map(div => div.textContent);
+
+  const correct = currentLesson[currentIndex].answer;
+
+  if (userAnswer.every((w, i) => w === correct[i])) {
+    stars++;
+    document.getElementById('star-count').textContent = stars;
+    showStarAnimation();
+    speakSentence(correct.join(' '));  // 🗣️ Read the sentence
+    currentIndex++;
+    setTimeout(showNextQuestion, 1800);  // Give time for audio
+  }
+}
 
   const correct = currentLesson[currentIndex].answer;
 
@@ -93,4 +105,16 @@ function showStarAnimation() {
   setTimeout(() => star.remove(), 1000);
 
   document.getElementById('correct-sound').play();
+}
+function speakSentence(text) {
+  if ('speechSynthesis' in window) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-AU';
+    utterance.pitch = 1.1;
+    utterance.rate = 0.9;
+    utterance.volume = 1;
+    speechSynthesis.speak(utterance);
+  } else {
+    console.warn("Text-to-speech not supported in this browser.");
+  }
 }
