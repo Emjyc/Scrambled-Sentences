@@ -74,6 +74,13 @@
       0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
       100% { transform: translate(-50%, -150%) scale(2); opacity: 0; }
     }
+
+    #translation {
+      margin-top: 10px;
+      font-size: 18px;
+      color: #444;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -87,24 +94,40 @@
     <h2 id="lesson-title"></h2>
     <div id="sentence-container" class="drop-zone"></div>
     <div id="word-bank"></div>
-    <div id="feedback"></div>
+    <div id="translation"></div>
     <div id="stars">Stars: <span id="star-count">0</span></div>
+    <button onclick="goBackToMenu()">Back to Main Menu</button>
   </div>
 
   <div id="star-animation"></div>
 
-  <!-- Replace 'correct.mp3' with a cute sound URL or host your own -->
   <audio id="correct-sound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_6cf3e05f70.mp3" preload="auto"></audio>
 
   <script>
     const lessons = {
       1: [
-        { scrambled: ["my", "I", "homework", "did"], answer: ["I", "did", "my", "homework"] },
-        { scrambled: ["breakfast", "ate", "She"], answer: ["She", "ate", "breakfast"] }
+        {
+          scrambled: ["my", "I", "homework", "did"],
+          answer: ["I", "did", "my", "homework"],
+          translation: "私は宿題をしました。"
+        },
+        {
+          scrambled: ["breakfast", "ate", "She"],
+          answer: ["She", "ate", "breakfast"],
+          translation: "彼女は朝ごはんを食べました。"
+        }
       ],
       2: [
-        { scrambled: ["watch", "they", "TV", "Did"], answer: ["Did", "they", "watch", "TV"] },
-        { scrambled: ["opened", "He", "window", "the"], answer: ["He", "opened", "the", "window"] }
+        {
+          scrambled: ["watch", "they", "TV", "Did"],
+          answer: ["Did", "they", "watch", "TV"],
+          translation: "彼らはテレビを見ましたか？"
+        },
+        {
+          scrambled: ["opened", "He", "window", "the"],
+          answer: ["He", "opened", "the", "window"],
+          translation: "彼は窓を開けました。"
+        }
       ]
     };
 
@@ -123,6 +146,14 @@
       showNextQuestion();
     }
 
+    function goBackToMenu() {
+      document.getElementById('game-screen').style.display = 'none';
+      document.getElementById('start-screen').style.display = 'block';
+      document.getElementById('sentence-container').innerHTML = '';
+      document.getElementById('word-bank').innerHTML = '';
+      document.getElementById('translation').textContent = '';
+    }
+
     function showNextQuestion() {
       const sentence = currentLesson[currentIndex];
       if (!sentence) {
@@ -132,8 +163,10 @@
 
       const sentenceContainer = document.getElementById('sentence-container');
       const wordBank = document.getElementById('word-bank');
+      const translation = document.getElementById('translation');
       sentenceContainer.innerHTML = '';
       wordBank.innerHTML = '';
+      translation.textContent = '';
 
       sentence.answer.forEach(() => {
         const dropSpot = document.createElement('div');
@@ -179,6 +212,10 @@
         document.getElementById('star-count').textContent = stars;
         showStarAnimation();
         speakSentence(correct.join(' '));
+
+        const translation = currentLesson[currentIndex].translation;
+        document.getElementById('translation').textContent = `🇯🇵 ${translation}`;
+
         currentIndex++;
         setTimeout(showNextQuestion, 1800);
       }
